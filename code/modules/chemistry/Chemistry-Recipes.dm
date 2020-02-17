@@ -3885,9 +3885,14 @@ datum
 			mix_phrase = "A strange green goopy liquid forms in the container."
 
 
-
-
-
+		Khaoium
+			name = "Khaoium"
+			id = "khaoium"
+			result = "khaoium"
+			required_reagents = list("water" = 5, "plasma" = 5) //debug recipe
+			result_amount = 1
+			mix_phrase = "The solution darkens and begins pulsing softly to a silent beat"
+			mix_sound = 'sound/effects/ghostbreath.ogg'
 
 
 

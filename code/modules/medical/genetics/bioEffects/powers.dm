@@ -1280,6 +1280,18 @@
 	var/processing = 0
 	var/atom/last_loc = null
 	acceptable_in_mutini = 0
+	/*
+	used by empowered effect
+	*/
+	var/atom/last_x = null
+	var/atom/last_y = null
+	var/atom/last_z = null
+	var/compression_factor = 3
+	var/pocket_dim_z = 4
+	var/pocket_xoffset = 0
+	var/pocket_yoffset = 0
+	var/calcx = null
+	var/calcy = null
 
 	OnRemove()
 		..()
@@ -1327,6 +1339,140 @@
 
 		P.processing = 1
 
+		if (P.power)
+			if (owner.z == P.pocket_dim_z)
+				P.active = 1
+			if (owner.z != P.pocket_dim_z)
+				P.active = 0
+			if (!P.active)
+				if ((istype(owner.loc,/area) && owner.loc:teleport_blocked) || isrestrictedz(owner.z))
+					boutput(owner, "<span style=\"color:red\">That won't work here.</span>")
+					owner.visible_message("<span style=\"color:red\"><b>Blue light fizzles around [owner]!</b></span>")
+					return
+				P.active = 1
+				owner.visible_message("<span style=\"color:red\"><b>[owner] vanishes in a burst of blue light!</b></span>")
+				playsound(owner.loc, "sound/effects/ghost2.ogg", 50, 0)
+				animate(owner, color = "#0000FF", time = 5, easing = LINEAR_EASING)
+				animate(alpha = 0, time = 5, easing = LINEAR_EASING)
+				for (var/mob/living/M in view(1, null))
+					var/obj/item/grab/G = usr.equipped()
+					if (M == owner)
+						continue
+					if (istype(usr.equipped(), /obj/item/grab) && G.state >= 1)
+						M.visible_message("<span style=\"color:red\"><b>[M] vanishes in a burst of blue light while being dragged by [owner]!</b></span>")
+						animate(M, color = "#0000FF", time = 5, easing = LINEAR_EASING)
+						animate(alpha = 0, time = 5, easing = LINEAR_EASING)
+						SPAWN_DBG(7)
+							P.last_x = owner.x
+							P.last_y = owner.y
+							P.last_z = owner.z
+							P.calcx = (P.last_x / P.compression_factor) + P.pocket_xoffset
+							P.calcy = (P.last_y / P.compression_factor) + P.pocket_yoffset
+							if(P.calcx < 1)
+								P.calcx = 2
+							if(P.calcy < 1)
+								P.calcy = 2
+							M.set_loc(locate(P.calcx, P.calcy, P.pocket_dim_z))
+							animate(M, alpha = 255, time = 5, easing = LINEAR_EASING)
+							animate(color = "#FFFFFF", time = 5, easing = LINEAR_EASING)
+							M.visible_message("<span style=\"color:red\"><b>[M] appears in a burst of blue light while being dragged by [owner]!</b></span>")
+
+				SPAWN_DBG(7)
+					P.last_x = owner.x
+					P.last_y = owner.y
+					P.last_z = owner.z
+					P.calcx = (P.last_x / P.compression_factor) + P.pocket_xoffset
+					P.calcy = (P.last_y / P.compression_factor) + P.pocket_yoffset
+					if(P.calcx < 1)
+						P.calcx = 2
+					if(P.calcy < 1)
+						P.calcy = 2
+					owner.set_loc(locate(P.calcx, P.calcy, P.pocket_dim_z))
+					animate(owner, alpha = 255, time = 5, easing = LINEAR_EASING)
+					animate(color = "#FFFFFF", time = 5, easing = LINEAR_EASING)
+					owner.visible_message("<span style=\"color:red\"><b>[owner] appears in a burst of blue light!</b></span>")
+				P.processing = 0
+				return 1
+			else
+				for (var/mob/living/M in view(1, null))
+					var/obj/item/grab/G = usr.equipped()
+					if (M == owner)
+						continue
+					if (istype(usr.equipped(), /obj/item/grab) && G.state >= 1)
+						M.visible_message("<span style=\"color:red\"><b>[M] vanishes in a burst of blue light while being dragged by [owner]!</b></span>")
+						playsound(owner.loc, "sound/effects/ghost2.ogg", 50, 0)
+						animate(M, color = "#0000FF", time = 5, easing = LINEAR_EASING)
+						animate(alpha = 0, time = 5, easing = LINEAR_EASING)
+						SPAWN_DBG(7)
+							animate(M, alpha = 255, time = 5, easing = LINEAR_EASING)
+							animate(color = "#FFFFFF", time = 5, easing = LINEAR_EASING)
+							P.last_x = owner.x
+							P.last_y = owner.y
+							P.calcx = (P.last_x * P.compression_factor) - P.pocket_xoffset
+							P.calcy = (P.last_y * P.compression_factor) - P.pocket_yoffset
+							if(P.calcx < 1)
+								P.calcx = 2
+							if(P.calcy < 1)
+								P.calcy = 2
+							M.set_loc(locate(P.calcx, P.calcy, P.last_z))
+							M.visible_message("<span style=\"color:red\"><b>[M] appears in a burst of blue light while being dragged by [owner]!</b></span>")
+
+				owner.visible_message("<span style=\"color:red\"><b>[owner] vanishes in a burst of blue light!</b></span>")
+				playsound(owner.loc, "sound/effects/ghost2.ogg", 50, 0)
+				animate(owner, color = "#0000FF", time = 5, easing = LINEAR_EASING)
+				animate(alpha = 0, time = 5, easing = LINEAR_EASING)
+				SPAWN_DBG(7)
+					P.last_x = owner.x
+					P.last_y = owner.y
+					P.calcx = (P.last_x * P.compression_factor) - P.pocket_xoffset
+					P.calcy = (P.last_y * P.compression_factor) - P.pocket_yoffset
+					if(P.calcx < 1)
+						P.calcx = 2
+					if(P.calcy < 1)
+						P.calcy = 2
+					owner.set_loc(locate(P.calcx, P.calcy, P.last_z))
+					P.last_x = null
+					P.last_y = null
+					P.last_z = null
+					animate(owner, alpha = 255, time = 5, easing = LINEAR_EASING)
+					animate(color = "#FFFFFF", time = 5, easing = LINEAR_EASING)
+					owner.visible_message("<span style=\"color:red\"><b>[owner] appears  in a burst of blue light!</b></span>")
+					P.active = 0
+				P.processing = 0
+		else
+			if (!P.active)
+				P.active = 1
+				P.last_loc = owner.loc
+				owner.visible_message("<span style=\"color:red\"><b>[owner] vanishes in a burst of blue light!</b></span>")
+				playsound(owner.loc, "sound/effects/ghost2.ogg", 50, 0)
+				animate(owner, color = "#0000FF", time = 5, easing = LINEAR_EASING)
+				animate(alpha = 0, time = 5, easing = LINEAR_EASING)
+				SPAWN_DBG(7)
+					var/obj/dummy/spell_invis/invis_object = new /obj/dummy/spell_invis(get_turf(owner))
+					invis_object.canmove = 0
+					owner.set_loc(invis_object)
+				P.processing = 0
+				return 1
+			else
+				var/obj/dummy/spell_invis/invis_object
+				if (istype(owner.loc,/obj/dummy/spell_invis/))
+					invis_object = owner.loc
+				owner.set_loc(P.last_loc)
+				if (invis_object)
+					qdel(invis_object)
+				P.last_loc = null
+
+				owner.visible_message("<span style=\"color:red\"><b>[owner] appears in a burst of blue light!</b></span>")
+				playsound(owner.loc, "sound/effects/ghost2.ogg", 50, 0)
+				SPAWN_DBG(7)
+					animate(owner, alpha = 255, time = 5, easing = LINEAR_EASING)
+					animate(color = "#FFFFFF", time = 5, easing = LINEAR_EASING)
+					P.active = 0
+				P.processing = 0
+
+
+
+/*
 		if (!P.active)
 			P.active = 1
 			P.last_loc = owner.loc
@@ -1356,7 +1502,7 @@
 				animate(color = "#FFFFFF", time = 5, easing = LINEAR_EASING)
 				P.active = 0
 			P.processing = 0
-
+*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1978,7 +2124,7 @@
 		if (count < ticks_to_explode)
 			count++
 			return
-		else 
+		else
 			count = 0
 
 		if (!src.safety && prob(70))
@@ -2009,7 +2155,7 @@
 	var/limb_force = 20
 
 	cast(atom/target)
-		if (..())	
+		if (..())
 			return 1
 
 		if (ishuman(owner))
@@ -2024,7 +2170,7 @@
 				thrown_limb = H.limbs.l_leg.remove(0)
 			else if (H.has_limb("r_arm"))
 				thrown_limb = H.limbs.r_arm.remove(0)
-			else 
+			else
 				return 1
 			spawn(1)
 				if (istype(thrown_limb))
