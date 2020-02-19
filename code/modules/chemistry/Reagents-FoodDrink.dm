@@ -3492,11 +3492,11 @@ datum
 			fluid_b = 10
 			hunger_value = 0.25
 
-			reaction_mob(var/mob/living/M, var/method=TOUCH, var/volume_passed)	
+			reaction_mob(var/mob/living/M, var/method=TOUCH, var/volume_passed)
 				if(!volume_passed)
 					return
 				if(!ishuman(M))
-					return	
+					return
 
 				var/list/covered = holder.covered_turf()
 				src = null
@@ -3617,3 +3617,74 @@ datum
 								M.visible_message("<span style=\"color:red\">[M] is consumed in flames!</span>")
 								M.firegib()
 				..()
+
+		fooddrink/alcoholic/nicotini
+			name = "nicotini"
+			id = "nicotini"
+			description = "Why would you even mix this? How does nicotine even taste?	"
+			reagent_state = LIQUID
+			fluid_r = 153
+			fluid_g = 67
+			fluid_b = 85
+			transparency = 190
+			alch_strength = 0.3
+			depletion_rate = 0.4
+
+			on_mob_life(var/mob/M, var/mult = 1)
+				M.reagents.add_reagent("nicotine", 1 * mult)
+				..()
+
+		fooddrink/nikotini
+			name = "nikotini"
+			id = "nikotini"
+			description = "The drink seems to be slightly glowing. Wait, did it just meow? it smells faintly of pancakes!"
+			reagent_state = LIQUID
+			fluid_r = 205
+			fluid_g = 118
+			fluid_b = 166
+			transparency = 255
+			depletion_rate = 0.4
+
+			proc/scarf(var/mob/living/carbon/human/M as mob)
+				M.show_message("<span style=\"color:blue\">A scarf sprouts from your neck. It's quite tight, but comfortable!</span>")
+				var/obj/item/clothing/suit/G = M.wear_suit
+				if (G)
+					M.u_equip(G)
+					if (M.client)
+						M.client.screen -= G
+					G.loc = M.loc
+					G.dropped(M)
+					G.layer = initial(G.layer)
+				var/obj/item/clothing/suit/N = new/obj/item/clothing/suit/scarf()
+				N.loc = M
+				N.layer = M.layer
+				N.master = M
+				M.wear_suit = N
+				M.update_clothing()
+				N.cant_self_remove = 1
+				N.cant_other_remove = 1
+
+			on_add(var/mob/living/carbon/human/M as mob)
+				if(!M)
+					M = holder.my_atom
+				scarf(M)
+
+			on_remove(var/mob/living/carbon/human/M as mob)
+				if(!M)
+					M = holder.my_atom
+				var/obj/item/clothing/suit/scarf/N = M.wear_suit
+				N.cant_self_remove = 0
+				N.cant_other_remove = 0
+				M.show_message("<span style=\"color:blue\">The scarf feels less tight somehow</span>")
+				M.update_clothing()
+
+			on_mob_life(var/mob/M, var/mult = 0)
+				if(prob(5))
+					M.visible_message("<span style=\"color:blue\"><b>[M.name]</b> hisses!</span>")
+					playsound(M.loc, "sound/voice/animal/cat_hiss.ogg", 50, 1)
+				if(prob(10))
+					M.visible_message("<span style=\"color:blue\"><b>[M.name]</b> meows like a kitten! What the fuck?</span>")
+					playsound(M.loc, "sound/voice/animal/cat.ogg", 50, 1)
+				if(prob(5))
+					M.show_message("<span style=\"color:red\"><b>You feel an intense hunger for pancakes!<b></span>")
+				..(M)

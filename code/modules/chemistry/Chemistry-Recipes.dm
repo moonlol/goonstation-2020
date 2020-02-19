@@ -3884,12 +3884,20 @@ datum
 			result_amount = 3
 			mix_phrase = "A strange green goopy liquid forms in the container."
 
+		cocktail_nicotini
+			name = "Nicotini"
+			id = "nicotini"
+			result = "nicotini"
+			required_reagents = list("martini" = 1, "nicotine" = 1)
+			result_amount = 2
+			mix_phrase = "The drink fizzes and turns into a bland violent color. James Bond is crying."
 
-
-
-
-
-
-
+		cocktail_nikotini
+			name = "Nikotini"
+			id = "nikotini"
+			result = "nikotini"
+			required_reagents = list("water" = 5, "plasma" = 5) //when merging dm moonlol#3906 or Oscartm#0001
+			result_amount = 2 //change when merging
+			mix_phrase = "The ingredients mix together, and the drink meows. What."
 
 #undef get_fucked_clarks
