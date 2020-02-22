@@ -26,6 +26,7 @@
 	var/ai_attacknpc = 1
 	var/ai_suicidal = 0 //Will it attack itself?
 	var/ai_active = 0
+	var/ai_prefrozen //needed for timestop
 
 	var/blood_id = null
 
@@ -570,6 +571,10 @@
 		boutput(src, "<span style=\"color:red\">Your muzzle prevents you from speaking.</span>")
 		return
 
+	if(paused)
+		boutput(src, "<span style=\"color:red\">Can't speak in stopped time dummy!.</span>")
+		return
+
 	if (ishuman(src))
 		var/mob/living/carbon/human/H = src
 		// If theres no oxygen
@@ -977,6 +982,8 @@
 			move_laying.move_callback(src, oldloc, NewLoc)
 
 /mob/living/Move(var/turf/NewLoc, direct)
+	if(paused)
+		return
 	var/oldloc = loc
 	. = ..()
 	if (isturf(oldloc) && isturf(loc) && move_laying)

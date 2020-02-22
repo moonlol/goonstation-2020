@@ -100,6 +100,8 @@
 
 	var/area/registered_area = null //the area this critter is registered in
 
+	var/paused = FALSE
+
 	/////////////////////////////////////////////////////////////
 	// INTRUDER VARS AND PROCS
 	var/selected = 0
@@ -167,6 +169,8 @@
 
 	proc/wake_from_hibernation()
 		if(task != "hibernating") return
+		if(paused)
+			return
 		//DEBUG_MESSAGE("[src] woke from hibernation at [showCoords(src.x, src.y, src.z)] in [registered_area ? registered_area.name : "nowhere"] due to [usr ? usr : "some mysterious fucking reason"]")
 		//Ok, now we look to see if we should get murdlin'
 		task = "sleeping"
@@ -193,7 +197,7 @@
 
 
 	HasProximity(atom/movable/AM as mob|obj)
-		if(task == "hibernating" && ismob(AM))
+		if(task == "hibernating" && istype(AM, /mob) && !paused)
 			var/mob/living/M = AM
 			if(M.client) wake_from_hibernation()
 
@@ -288,7 +292,7 @@
 		if (!attack_force)
 			return
 
-		if (src.sleeping)
+		if (src.sleeping && !src.paused)
 			sleeping = 0
 			on_wake()
 
@@ -328,12 +332,12 @@
 
 
 	proc/on_damaged(mob/user)
-		if(registered_area) //In case some butt fiddles with a hibernating critter
+		if(registered_area && !paused) //In case some butt fiddles with a hibernating critter
 			registered_area.wake_critters()
 		return
 
 	proc/on_pet()
-		if(registered_area) //In case some nice person fiddles with a hibernating critter
+		if(registered_area && !paused) //In case some nice person fiddles with a hibernating critter
 			registered_area.wake_critters()
 		return
 
@@ -343,7 +347,7 @@
 			..()
 			return
 
-		if (src.sleeping)
+		if (src.sleeping && !src.paused)
 			sleeping = 0
 			on_wake()
 
@@ -380,6 +384,8 @@
 	proc/patrol_step()
 		if (!mobile)
 			return
+		if(paused)
+			return
 		var/turf/moveto = locate(src.x + rand(-1,1),src.y + rand(-1, 1),src.z)
 		if(isturf(moveto) && !moveto.density) patrol_to(moveto)
 		if(src.aggressive) seek_target()
@@ -407,7 +413,7 @@
 		var/damage = 0
 		damage = round((P.power*P.proj_data.ks_ratio), 1.0)
 
-		if (src.sleeping)
+		if (src.sleeping && !src.paused)
 			sleeping = 0
 			on_wake()
 
@@ -430,7 +436,7 @@
 			src.CritterDeath()
 
 	ex_act(severity)
-		if (src.sleeping)
+		if (src.sleeping && !src.paused)
 			sleeping = 0
 			on_wake()
 
@@ -476,6 +482,8 @@
 		if (!mobile)
 			task = "thinking"
 			return
+		if(paused)
+			return
 		if (src.loc == followed_path_retry_target)
 			logTheThing("debug", null, null, "<B>Marquesas/Critter Astar:</b> Critter arrived at target location.")
 			task = "thinking"
@@ -512,10 +520,15 @@
 				step_to(src, nextturf)
 				followed_path -= nextturf
 		if (!follow_path_blindly)
+			if(paused)
+				return
 			seek_target()
 
 	proc/do_wake_check(var/force = 0)
 		if(!force && sleeping-- > 0) return
+
+		if(paused)
+			return
 
 		var/waking = 0
 
@@ -551,6 +564,9 @@
 
 	proc/do_sleep_check(var/force = 0)
 		if(!force && sleep_check-- > 0) return
+
+		if(paused)
+			return
 
 		var/stay_awake = 0
 
@@ -618,7 +634,7 @@
 					src.last_found = world.time
 					src.frustration = 0
 					src.task = "thinking"
-					if (mobile)
+					if (mobile && !paused)
 						walk_to(src,0)
 
 				var/atom/current_target
@@ -659,6 +675,8 @@
 					src.task = "thinking"
 
 			if ("chasing food")
+				if(src.paused)
+					return
 				if (!src.chases_food || src.food_target == null)
 					src.task = "thinking"
 				else if (get_dist(src, src.food_target) <= src.attack_range)
@@ -667,12 +685,16 @@
 					walk_to(src, src.food_target,1,4)
 
 			if ("eating")
+				if(src.paused)
+					return
 				if (get_dist(src, src.food_target) > src.attack_range)
 					src.task = "chasing"// food"
 				else
 					src.task = "eating2"
 
 			if ("eating2")
+				if(src.paused)
+					return
 				if (get_dist(src, src.food_target) > src.attack_range)
 					src.task = "chasing"// food"
 				else
@@ -691,6 +713,8 @@
 						src.health += src.health_gain_from_food
 
 			if ("chasing corpse")
+				if(src.paused)
+					return
 				if (!src.scavenger || src.corpse_target == null)
 					src.task = "thinking"
 				else if (get_dist(src, src.corpse_target) <= src.attack_range)
@@ -699,6 +723,8 @@
 					walk_to(src, src.corpse_target,1,4)
 
 			if ("scavenging")
+				if(src.paused)
+					return
 				if (!src.scavenger || src.corpse_target == null)
 					src.task = "thinking"
 				if (get_dist(src, src.corpse_target) > src.attack_range)
@@ -722,6 +748,8 @@
 							src.visible_message("<span style=\"color:red\"><b>[src]</b> has eaten enough of [src.corpse_target] that their bones are showing!")
 
 			if ("attacking")
+				if(src.paused)
+					return
 				// see if he got away
 				if ((get_dist(src, src.target) > src.attack_range) || ((src.target:loc != src.target_lastloc)))
 					src.anchored = initial(src.anchored)
@@ -758,6 +786,8 @@
 						src.attacking = 0
 						src.task = "chasing"
 			if ("wandering")
+				if(paused)
+					return
 				patrol_step()
 		return 1
 
@@ -864,6 +894,8 @@
 		src.tokenized_message(death_text)
 
 	proc/ChaseAttack(mob/M)
+		if(src.paused)
+			return
 		src.visible_message("<span class='combat'><B>[src]</B> [src.chase_text] [src.target]!</span>")
 		if (ishuman(M))
 			var/mob/living/carbon/human/H = M
@@ -933,6 +965,8 @@
 
 	proc/Shoot(var/target, var/start, var/user, var/bullet = 0)
 		if(target == start)
+			return
+		if(paused)
 			return
 	//	playsound(user, "mp5gunshot.ogg", 100, 1)
 	/*	if(bullet == 0)
