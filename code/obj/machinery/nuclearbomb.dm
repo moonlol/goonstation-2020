@@ -309,8 +309,7 @@
 			if(!nukee.stat)
 				nukee.emote("scream")
 			// until we can fix the lag related to deleting mobs we should probably just leave the end of the animation up and kill everyone instead of firegibbing everyone
-			var/obj/storage/secure/closet/fridge/F
-			if(!nukee in F)
+			if(!istype(nukee.loc, /obj/storage/secure/closet/fridge))
 				nukee.death()//firegib()
 
 		creepify_station()
