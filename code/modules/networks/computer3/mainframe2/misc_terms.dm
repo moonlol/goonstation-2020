@@ -1353,7 +1353,7 @@
 	proc/detonate()
 		world << sound('sound/effects/kaboom.ogg')
 		//explosion(src, src.loc, 10, 20, 30, 35)
-		explosion_new(src, get_turf(src), 100, 1, 1)
+		explosion_new(src, get_turf(src), 10000, 1, 1)
 		//dispose()
 		src.dispose()
 		return
