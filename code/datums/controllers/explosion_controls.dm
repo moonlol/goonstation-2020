@@ -4,10 +4,11 @@ var/datum/explosion_controller/explosions
 	var/list/queued_explosions = list()
 	var/list/queued_turfs = list()
 	var/list/queued_turfs_blame = list()
+	var/list/queued_turfs_fridge = list()
 	var/distant_sound = 'sound/effects/explosionfar.ogg'
 	var/exploding = 0
 
-	proc/explode_at(atom/source, turf/epicenter, power, brisance = 1)
+	proc/explode_at(atom/source, turf/epicenter, power, brisance = 1, fridge)
 		if (!istype(epicenter, /turf))
 			epicenter = get_turf(epicenter)
 		if (!epicenter)
@@ -15,7 +16,7 @@ var/datum/explosion_controller/explosions
 		if (epicenter.loc:sanctuary)
 			return//no boom boom in sanctuary
 
-		queued_explosions += new/datum/explosion(source, epicenter, power, brisance)
+		queued_explosions += new/datum/explosion(source, epicenter, power, brisance, fridge)
 
 	proc/queue_damage(var/list/new_turfs)
 		for (var/turf/T in new_turfs)
@@ -31,30 +32,40 @@ var/datum/explosion_controller/explosions
 		var/needrebuild = 0
 		var/p
 		var/last_touched
-
+		var/fridge = 0
 
 
 		var/iteration = 0
 
 		for (var/turf/T in queued_turfs)
 			p = queued_turfs[T]
+			fridge = queued_turfs_fridge[T]
 			last_touched = queued_turfs_blame[T]
 			//boutput(world, "P1 [p]")
 			if (p >= 6)
 				for (var/atom/A as obj|mob in T)
-					A.ex_act(1, last_touched, p)
-					if (istype(A, /obj/cable)) // these two are hacky, newcables should relieve the need for this
-						needrebuild = 1
+					if(fridge && istype(A, /obj/storage/secure/closet/fridge))
+						return
+					else
+						A.ex_act(1, last_touched, p)
+						if (istype(A, /obj/cable)) // these two are hacky, newcables should relieve the need for this
+							needrebuild = 1
 					//LAGCHECK(LAG_REALTIME)
 			else if (p >= 3)
 				for (var/atom/A as obj|mob in T)
-					A.ex_act(2, last_touched, p)
-					if (istype(A, /obj/cable))
-						needrebuild = 1
+					if(fridge && istype(A, /obj/storage/secure/closet/fridge))
+						return
+					else
+						A.ex_act(2, last_touched, p)
+						if (istype(A, /obj/cable))
+							needrebuild = 1
 					//LAGCHECK(LAG_REALTIME)
 			else
 				for (var/atom/A as obj|mob in T)
-					A.ex_act(3, last_touched, p)
+					if(fridge && istype(A, /obj/storage/secure/closet/fridge))
+						return
+					else
+						A.ex_act(3, last_touched, p)
 					//LAGCHECK(LAG_REALTIME)
 
 			iteration++
@@ -75,6 +86,7 @@ var/datum/explosion_controller/explosions
 
 		queued_turfs.len = 0
 		queued_turfs_blame.len = 0
+		queued_turfs_fridge.len = 0
 		defer_powernet_rebuild = 0
 		defer_camnet_rebuild = 0
 		exploding = 0
@@ -101,12 +113,14 @@ var/datum/explosion_controller/explosions
 	var/turf/epicenter
 	var/power
 	var/brisance
+	var/fridge = 0
 
-	New(atom/source, turf/epicenter, power, brisance)
+	New(atom/source, turf/epicenter, power, brisance, fridge)
 		src.source = source
 		src.epicenter = epicenter
 		src.power = power
 		src.brisance = brisance
+		src.fridge = fridge
 
 	proc/logMe()
 		//I do not give a flying FUCK about what goes on in the colosseum. =I
@@ -143,6 +157,7 @@ var/datum/explosion_controller/explosions
 
 		var/list/nodes = list()
 		var/list/blame = list()
+		var/list/fridgeval = list()
 		var/list/open = list(epicenter)
 		nodes[epicenter] = radius
 		while (open.len)
@@ -171,6 +186,7 @@ var/datum/explosion_controller/explosions
 			var/p = power / ((radius-nodes[T])**2)
 			nodes[T] = p
 			blame[T] = last_touched
+			fridgeval[T] = fridge
 			p = min(p, 10)
 			for(var/mob/living/carbon/C in T)
 				if (!isdead(C) && C.client)
@@ -182,3 +198,4 @@ var/datum/explosion_controller/explosions
 
 		explosions.queue_damage(nodes)
 		explosions.queued_turfs_blame += blame
+		explosions.queued_turfs_fridge += fridgeval

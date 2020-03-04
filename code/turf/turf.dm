@@ -9,6 +9,8 @@ var/global/client/ff_debugger = null
 
 	var/tagged = 0 // Gang wars thing
 
+	var/fridge = 0 //jesus fuck why am i doing this -moonlol. (needed for fridge immunity to nukes)
+
 	level = 1.0
 
 	unsimulated
