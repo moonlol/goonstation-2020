@@ -3492,11 +3492,11 @@ datum
 			fluid_b = 10
 			hunger_value = 0.25
 
-			reaction_mob(var/mob/living/M, var/method=TOUCH, var/volume_passed)	
+			reaction_mob(var/mob/living/M, var/method=TOUCH, var/volume_passed)
 				if(!volume_passed)
 					return
 				if(!ishuman(M))
-					return	
+					return
 
 				var/list/covered = holder.covered_turf()
 				src = null
@@ -3617,3 +3617,31 @@ datum
 								M.visible_message("<span style=\"color:red\">[M] is consumed in flames!</span>")
 								M.firegib()
 				..()
+
+
+		fooddrink/alcoholic/lingtea
+			name = "Ling Island Iced Tea"
+			id = "lingtea"
+			description = "Preferred by changelings, crew members, and the surprising overlap between them."
+			reagent_state = LIQUID
+			alch_strength = 0
+			fluid_r = 137
+			fluid_g = 158
+			fluid_b = 81
+			transparency = 200
+			var/alch_counter = 0 //ripped straight from amantin - moonlol
+
+			pooled()
+				..()
+				alch_counter = 0
+
+			on_mob_life(var/mob/M, var/mult = 1)
+
+				if (!M) M = holder.my_atom
+				alch_counter += rand(0,0.1) + 0.2 // RNG rolls moved to accumulation proc for consistency
+
+				..()
+
+			on_mob_life_complete(var/mob/living/carbon/human/M)
+				if(M)
+					M.reagents.add_reagent("ethanol", (alch_counter + (rand(2,3))))
