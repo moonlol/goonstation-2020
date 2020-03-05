@@ -3891,7 +3891,7 @@ datum
 			result = "lingtea"
 			required_reagents = list("longisland" = 1, "neurotoxin" = 1)
 			result_amount = 2
-			mix_phrase = "The toxin upsets the delicate balance of alcohol and sours in this mix. Ew"
+			mix_phrase = "The toxin upsets the delicate balance of alcohol and sours in this mix. Ew."
 
 
 
