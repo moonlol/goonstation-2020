@@ -1750,13 +1750,11 @@ proc/mob/living/carbon/human/dabbify(var/mob/living/carbon/human/O)
 	torso.filters += filter(type="alpha", icon=icon('icons/mob/humanmasks.dmi', "torso"))
 	O.dabbing = TRUE
 	O.dir = SOUTH
+	O.dir_locked = TRUE
 	sleep(0.1) //so the direction setting actually takes place
 	world << torso
 	world << right_arm
 	world << left_arm
-//	torso.add_depth_shadow()
-//	right_arm.add_depth_shadow()
-//	left_arm.add_depth_shadow()
 	torso.plane = PLANE_DEFAULT
 	right_arm.plane = PLANE_DEFAULT
 	left_arm.plane = PLANE_DEFAULT
@@ -1777,4 +1775,5 @@ proc/mob/living/carbon/human/dabbify(var/mob/living/carbon/human/O)
 			qdel(left_arm)
 			O.layer = MOB_LAYER
 			O.dabbing = FALSE
+			O.dir_locked = FALSE
 			O.render_target = "\ref[O]"

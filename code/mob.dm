@@ -205,6 +205,8 @@
 
 	appearance_flags = KEEP_TOGETHER
 
+	var/dir_locked = FALSE
+
 //obj/item/setTwoHanded calls this if the item is inside a mob to enable the mob to handle UI and hand updates as the item changes to or from 2-hand
 /mob/proc/updateTwoHanded(var/obj/item/I, var/twoHanded = 1)
 	return 0 //0=couldnt do it(other hand full etc), 1=worked just fine.
@@ -1113,18 +1115,23 @@
 	//if (istype(target, /obj/screen/ability))
 	//	target:clicked(params)
 	if (get_dist(src, target) > 0)
-		dir = get_dir(src, target)
+		if(!dir_locked)
+			dir = get_dir(src, target)
 
 /mob/proc/hotkey(name)
 	switch (name)
 		if ("look_n")
-			src.dir = NORTH
+			if(!dir_locked)
+				src.dir = NORTH
 		if ("look_s")
-			src.dir = SOUTH
+			if(!dir_locked)
+				src.dir = SOUTH
 		if ("look_e")
-			src.dir = EAST
+			if(!dir_locked)
+				src.dir = EAST
 		if ("look_w")
-			src.dir = WEST
+			if(!dir_locked)
+				src.dir = WEST
 
 		if ("stop_pull")
 			if (src.pulling)

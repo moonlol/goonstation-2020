@@ -34,7 +34,8 @@ mob
 			else
 				src.move_dir = 0
 
-			src.dir = src.move_dir
+			if(!src.dir_locked || !istype(src, /mob/living/carbon/human)) //in order to not turn around and good fuckin ruin the dab animation
+				src.dir = src.move_dir
 		if (changed & (KEY_THROW|KEY_PULL|KEY_POINT|KEY_EXAMINE|KEY_BOLT|KEY_OPEN|KEY_SHOCK)) // bleh
 			src.update_cursor()
 
@@ -71,7 +72,8 @@ mob
 				src.glide_size = glide // dumb hack: some Move() code needs glide_size to be set early in order to adjust "following" objects
 				src.animate_movement = SLIDE_STEPS
 				src.set_loc(get_step(src.loc, move_dir))
-				src.dir = move_dir
+				if(!src.dir_locked || !istype(src, /mob/living/carbon/human)) //in order to not turn around and good fuckin ruin the dab animation
+					src.dir = move_dir
 				OnMove()
 				src.glide_size = glide
 				next_move = world.time + (running ? 0.5 : 1.5)
