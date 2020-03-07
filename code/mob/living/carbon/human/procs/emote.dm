@@ -1671,6 +1671,7 @@
 
 
 						if(prob(92))
+							dabbify(H)
 							var/get_dabbed_on = 0
 							if(locate(/mob/living) in range(1, src))
 								if(isturf(src.loc))
@@ -1734,3 +1735,46 @@
 			var/atom/A = src.loc
 			for (var/mob/O in A.contents)
 				O.show_message("<span style='color:#605b59'>[message]</span>", m_type, group = "[src]_[act]_[custom]")
+
+
+proc/mob/living/carbon/human/dabbify(var/mob/living/carbon/human/O)
+	O.render_target = "*\ref[O]"
+	var/image/left_arm = image(null)
+	left_arm.render_source = O.render_target
+	left_arm.filters += filter(type="alpha", icon=icon('icons/mob/humanmasks.dmi', "r_arm"))
+	var/image/right_arm = image(null)
+	right_arm.render_source = O.render_target
+	right_arm.filters += filter(type="alpha", icon=icon('icons/mob/humanmasks.dmi', "l_arm"))
+	var/image/torso = image(null)
+	torso.render_source = O.render_target
+	torso.filters += filter(type="alpha", icon=icon('icons/mob/humanmasks.dmi', "torso"))
+	O.dabbing = TRUE
+	O.dir = SOUTH
+	sleep(0.1) //so the direction setting actually takes place
+	world << torso
+	world << right_arm
+	world << left_arm
+//	torso.add_depth_shadow()
+//	right_arm.add_depth_shadow()
+//	left_arm.add_depth_shadow()
+	torso.plane = PLANE_DEFAULT
+	right_arm.plane = PLANE_DEFAULT
+	left_arm.plane = PLANE_DEFAULT
+	torso.loc = get_turf(O)
+	right_arm.loc = get_turf(O)
+	left_arm.loc = get_turf(O)
+	animate(left_arm, transform = turn(left_arm.transform, -110), pixel_y = 10, pixel_x = -1, 5, 1, CIRCULAR_EASING)
+	animate(right_arm, transform = turn(right_arm.transform, -95), pixel_y = 1, pixel_x = 10, 5, 1, CIRCULAR_EASING)
+	SPAWN_DBG(10)
+		animate(left_arm, transform = null, pixel_y = 0, pixel_x = 0, 4, 1, CIRCULAR_EASING)
+		animate(right_arm, transform = null, pixel_y = 0, pixel_x = 0, 4, 1, CIRCULAR_EASING)
+		SPAWN_DBG(5)
+			torso.loc = null
+			qdel(torso)
+			right_arm.loc = null
+			qdel(right_arm)
+			left_arm.loc = null
+			qdel(left_arm)
+			O.layer = MOB_LAYER
+			O.dabbing = FALSE
+			O.render_target = "\ref[O]"

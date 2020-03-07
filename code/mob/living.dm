@@ -69,6 +69,9 @@
 	var/caneat = 1
 	var/candrink = 1
 
+	var/dabbing = FALSE
+
+
 //#ifdef MAP_OVERRIDE_DESTINY
 	var/hibernating = 0 // if they're stored in the cryotron, Life() gets skipped
 //#endif
@@ -977,6 +980,8 @@
 			move_laying.move_callback(src, oldloc, NewLoc)
 
 /mob/living/Move(var/turf/NewLoc, direct)
+	if(dabbing)
+		return
 	var/oldloc = loc
 	. = ..()
 	if (isturf(oldloc) && isturf(loc) && move_laying)
