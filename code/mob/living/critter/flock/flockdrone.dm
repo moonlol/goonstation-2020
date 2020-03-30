@@ -711,7 +711,7 @@
 	if(!isturf(target))
 		target = get_turf(target)
 
-	if(!istype(target, /turf/simulated) && !istype(target, /turf/space))
+	if(/*istype(target, /turf) &&*/ !istype(target, /turf/simulated) && !istype(target, /turf/space))
 		boutput(user, "<span class='text-red'>Something about this structure prevents it from being assimilated.</span>")
 	else if(isfeathertile(target))
 		if(istype(target, /turf/simulated/floor/feather))
@@ -736,7 +736,7 @@
 				boutput(user, "<span class='text-blue'>It's already been repurposed. Can't improve on perfection. (Use the disarm intent to construct a barricade.)</span>")
 		else
 			boutput(user, "<span class='text-blue'>It's already been repurposed. Can't improve on perfection.</span>")
-	else if(user.resources < 20)
+	else if(user.resources < 20 /*&& istype(target, /turf)*/)
 		boutput(user, "<span class='text-red'>Not enough resources to convert (you need 20).</span>")
 	else
 		actions.start(new/datum/action/bar/flock_convert(target), user)
@@ -778,6 +778,27 @@
 		boutput(user, "<span class='text-red'>They're already imprisoned, you can't double-imprison them!</span>")
 	else
 		actions.start(new/datum/action/bar/flock_entomb(target), user)
+ //FUCK
+/datum/limb/flock_converter/harm(atom/target, var/mob/living/critter/flock/drone/user)
+	if(!target || !user)
+		return
+	if(user.floorrunning)
+		return
+//	var/obj/table/flock/f = target
+/*	if(istype(f, /obj/table/flock))
+		message_admins("[target] is target")
+		message_admins("[src] is src")
+		message_admins("[user] is user")
+//		actions.start(new /datum/action/bar/icon/table_tool_interact(target, src, TABLE_DISASSEMBLE), user)
+*/
+	if(istype(target, /mob/living/critter/flock/drone))
+		var/mob/living/critter/flock/drone/f = target
+		if(isdead(f))
+			actions.start(new/datum/action/bar/icon/butcher_living_critter(f), user)
+		else
+			boutput(user, "<span class='text-red'>You can't butcher a living flockdrone!</span>")
+	else
+		..()
 
 /////////////////////////////////////////////////////////////////////////////////
 

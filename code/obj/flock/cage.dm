@@ -22,13 +22,14 @@
 	var/absorb_per_process_tick = 2
 
 	New(loc, mob/living/iced as mob, datum/flock/F=null)
-		..()	
+		..()
 		src.flock = F
 		var/datum/reagents/R = new /datum/reagents(initial_volume)
-		src.reagents = R	
+		src.reagents = R
 		iced.addOverlayComposition(/datum/overlayComposition/flockmindcircuit)
-		occupant = iced			
+		occupant = iced
 		processing_items |= src
+		src.reagents.gnesisstasis = 1
 
 	proc/getHumanPiece(var/mob/living/carbon/human/H)
 		// prefer inventory items before limbs, and limbs before organs
@@ -48,13 +49,13 @@
 			else
 				items += I
 		// only take the brain as the very last thing
-		if(organs.len >= 2)				
+		if(organs.len >= 2)
 			organs -= brain
 		if(items.len >= 1)
 			eating_occupant = 0
 			target = pick(items)
 			H.remove_item(target)
-			playsound(get_turf(src), "sound/weapons/nano-blade-1.ogg", 50, 1)	
+			playsound(get_turf(src), "sound/weapons/nano-blade-1.ogg", 50, 1)
 			boutput(H, "<span class='text-red'>[src] pulls [target] from you and begins to rip it apart.</span>")
 			src.visible_message("<span class='text-red'>[src] pulls [target] from [H] and begins to rip it apart.</span>")
 		else if(limbs.len >= 1)
@@ -63,7 +64,7 @@
 			H.limbs.sever(target)
 			H.emote("scream")
 			random_brute_damage(H, 20)
-			playsound(get_turf(src), "sound/impact_sounds/Flesh_Tear_1.ogg", 80, 1)	
+			playsound(get_turf(src), "sound/impact_sounds/Flesh_Tear_1.ogg", 80, 1)
 			boutput(H, "<span class='text-red bold'>[src] wrenches your [initial(target.name)] clean off and begins peeling it apart! Fuck!</span>")
 			src.visible_message("<span class='text-red bold'>[src] wrenches [target.name] clean off and begins peeling it apart!</span>")
 		else if(organs.len >= 1)
@@ -72,17 +73,17 @@
 			H.drop_organ(target)
 			H.emote("scream")
 			random_brute_damage(H, 20)
-			playsound(get_turf(src), "sound/impact_sounds/Flesh_Tear_2.ogg", 80, 1)	
+			playsound(get_turf(src), "sound/impact_sounds/Flesh_Tear_2.ogg", 80, 1)
 			boutput(H, "<span class='text-red bold'>[src] tears out your [initial(target.name)]! OH GOD!</span>")
-			src.visible_message("<span class='text-red bold'>[src] tears out [target.name]!</span>")			
-		else 
+			src.visible_message("<span class='text-red bold'>[src] tears out [target.name]!</span>")
+		else
 			H.gib()
 			occupant = null
-			underlays -= H			
-			playsound(get_turf(src), "sound/impact_sounds/Flesh_Tear_2.ogg", 80, 1)				
-			src.visible_message("<span class='text-red bold'>[src] rips what's left of its occupant to shreds!</span>")			
-	
-	Enter(atom/movable/O)		
+			underlays -= H
+			playsound(get_turf(src), "sound/impact_sounds/Flesh_Tear_2.ogg", 80, 1)
+			src.visible_message("<span class='text-red bold'>[src] rips what's left of its occupant to shreds!</span>")
+
+	Enter(atom/movable/O)
 		. = ..()
 		underlays += O
 
@@ -114,17 +115,17 @@
 			if(edibles.len >= 1)
 				target = pick(edibles)
 				eating_occupant = 0
-				playsound(get_turf(src), "sound/weapons/nano-blade-1.ogg", 50, 1)	
+				playsound(get_turf(src), "sound/weapons/nano-blade-1.ogg", 50, 1)
 				if(occupant)
 					boutput(occupant, "<span class='text-blue'>[src] begins to process [target].</span>")
 			else if(ishuman(occupant))
 				var/mob/living/carbon/human/H = occupant
-				getHumanPiece(H)	
+				getHumanPiece(H)
 			else if(occupant)
-				occupant.gib() // sorry buddy but if you're some freaky-deaky cube thing or some other weird living thing we can't be doing with this now			
+				occupant.gib() // sorry buddy but if you're some freaky-deaky cube thing or some other weird living thing we can't be doing with this now
 			if(target)
-				target.loc = src			
-		else			
+				target.loc = src
+		else
 			underlays -= target
 			if(hasvar(target, "health"))
 				var/absorption = min(absorb_per_process_tick, target:health)
@@ -145,15 +146,26 @@
 				boutput(occupant, "<span class='flocksay italics'>[pick_string("flockmind.txt", "flockmind_conversion")]</span>")
 		if(src.contents.len <= 0 && reagents.get_reagent_amount(target_fluid) < 50)
 			if(reagents.has_reagent(target_fluid)) // flood the area with our unprocessed contents
-				playsound(get_turf(src), "sound/impact_sounds/Slimy_Splat_1.ogg", 80, 1)	
+				playsound(get_turf(src), "sound/impact_sounds/Slimy_Splat_1.ogg", 80, 1)
 				T.fluid_react_single(reagents.get_reagent_amount(target_fluid))
 			qdel(src)
 
 	disposing()
-		playsound(get_turf(src), "sound/impact_sounds/Energy_Hit_2.ogg", 80, 1)			
+		playsound(get_turf(src), "sound/impact_sounds/Energy_Hit_2.ogg", 80, 1)
 		processing_items -= src
 		if(occupant)
 			occupant.removeOverlayComposition(/datum/overlayComposition/flockmindcircuit)
 		..()
+
+/obj/icecube/flockdrone/special_desc(dist, mob/user)
+	if(isflock(user))
+		var/special_desc = "<span class='flocksay'><span class='bold'>###=-</span> Ident confirmed, data packet received."
+		special_desc += "<br><span class='bold'>ID:</span> Matter Reprocessor"
+		special_desc += "<br><span class='bold'>Volume:</span> [src.reagents.get_reagent_amount(src.target_fluid)]"
+		special_desc += "<br><span class='bold'>Needed volume:</span> [src.create_egg_at_fluid]"
+ 		special_desc += "<br><span class='bold'>###=-</span></span>"
+		return special_desc
+	else
+		return null // give the standard description
 
 
